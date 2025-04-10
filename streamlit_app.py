@@ -8,7 +8,7 @@ from PIL import Image
 import base64
 import os
 
-# Import functions from your existing code
+# Import functions from main code base
 from extractor import (
     authenticate_twitter_api,
     get_user_tweets,
