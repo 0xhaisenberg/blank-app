@@ -133,12 +133,15 @@ if st.sidebar.button("Analyze Tweets"):
                                         col1.markdown(f"**Symbol:** {df['token_symbol'].iloc[0] if not df['token_symbol'].iloc[0] is None else 'Unknown'}")
                                         col2.markdown(f"**Tweet Time:** {tweet_time}")
                                         
-                                        # Convert tweet time to string format that Plotly can handle
-                                        # Fix for the timestamp issue - convert to string format that Plotly can handle
+                                        # Convert tweet time string to datetime object with proper timezone handling
                                         try:
-                                            tweet_dt_str = pd.to_datetime(tweet_time.replace(' UTC', '')).strftime('%Y-%m-%d %H:%M:%S')
+                                            # Remove UTC suffix if present and add timezone info
+                                            cleaned_tweet_time = tweet_time.replace(' UTC', '')
+                                            tweet_dt = pd.to_datetime(cleaned_tweet_time).tz_localize('UTC')
+                                            tweet_dt_str = tweet_dt.strftime('%Y-%m-%d %H:%M:%S')
                                         except:
                                             # Fallback if timestamp format is unexpected
+                                            tweet_dt = None
                                             tweet_dt_str = None
                                         
                                         # Create price chart
@@ -227,8 +230,12 @@ if st.sidebar.button("Analyze Tweets"):
                                         
                                         # Calculate price change metrics
                                         # Get the first price after tweet time
-                                        if tweet_dt_str:
-                                            tweet_dt = pd.to_datetime(tweet_dt_str)
+                                        if tweet_dt is not None:
+                                            # Make sure df['hour'] is timezone aware like tweet_dt
+                                            if df['hour'].dt.tz is None:
+                                                df['hour'] = df['hour'].dt.tz_localize('UTC')
+                                            
+                                            # Now we can safely compare timestamps
                                             post_tweet_data = df[df['hour'] >= tweet_dt].sort_values('hour')
                                             pre_tweet_data = df[df['hour'] < tweet_dt].sort_values('hour')
                                             
