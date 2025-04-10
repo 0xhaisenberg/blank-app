@@ -1,3 +1,4 @@
 streamlit
 flipside
 tweepy
+python-dateutil
