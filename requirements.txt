@@ -2,3 +2,4 @@ streamlit
 flipside
 tweepy
 python-dateutil
+streamlit plotly pandas
