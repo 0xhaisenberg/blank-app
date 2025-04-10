@@ -1,6 +1,6 @@
-# 🎈 Blank app template
+# 🎈 Address Extractor
 
-A simple Streamlit app template for you to modify!
+A simple proof of concept to extract solana contract addresses and display the price action
 
 [![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://blank-app-template.streamlit.app/)
 
