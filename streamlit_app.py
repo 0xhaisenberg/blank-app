@@ -192,12 +192,12 @@ if st.sidebar.button("Analyze Tweets"):
                                         
                                         # Calculate price change metrics
                                         # Get the first price after tweet time
-                                        
                                         # Ensuring both are in the same timezone and format:
-					df['hour'] = pd.to_datetime(df['hour'], utc=True)
-					tweet_dt = pd.to_datetime(tweet_time.replace(' UTC', ''), utc=True)
-					post_tweet_data = df[df['hour'] >= tweet_dt].sort_values('hour')
-					pre_tweet_data = df[df['hour'] < tweet_dt].sort_values('hour')
+
+                                        df['hour'] = pd.to_datetime(df['hour'], utc=True)
+                                        tweet_dt = pd.to_datetime(tweet_time.replace(' UTC', ''), utc=True)
+                                        post_tweet_data = df[df['hour'] >= tweet_dt].sort_values('hour')
+                                        pre_tweet_data = df[df['hour'] < tweet_dt].sort_values('hour')
                                         
                                         
                                         if not post_tweet_data.empty and not pre_tweet_data.empty:
