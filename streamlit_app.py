@@ -8,7 +8,7 @@ from PIL import Image
 import base64
 import os
 
-# Import functions from main code file
+# Import functions from your existing code
 from extractor import (
     authenticate_twitter_api,
     get_user_tweets,
@@ -133,8 +133,13 @@ if st.sidebar.button("Analyze Tweets"):
                                         col1.markdown(f"**Symbol:** {df['token_symbol'].iloc[0] if not df['token_symbol'].iloc[0] is None else 'Unknown'}")
                                         col2.markdown(f"**Tweet Time:** {tweet_time}")
                                         
-                                        # Find the tweet time as datetime for plotting the vertical line
-                                        tweet_dt = pd.to_datetime(tweet_time.replace(' UTC', '')).to_pydatetime()
+                                        # Convert tweet time to string format that Plotly can handle
+                                        # Fix for the timestamp issue - convert to string format that Plotly can handle
+                                        try:
+                                            tweet_dt_str = pd.to_datetime(tweet_time.replace(' UTC', '')).strftime('%Y-%m-%d %H:%M:%S')
+                                        except:
+                                            # Fallback if timestamp format is unexpected
+                                            tweet_dt_str = None
                                         
                                         # Create price chart
                                         st.markdown("#### Price Movement")
@@ -145,14 +150,29 @@ if st.sidebar.button("Analyze Tweets"):
                                             title=f"Price Movement for {df['token_symbol'].iloc[0] if not df['token_symbol'].iloc[0] is None else address[:10]+'...'}"
                                         )
                                         
-                                        # Add vertical line for tweet time
-                                        fig.add_vline(
-                                            x=tweet_dt, 
-                                            line_dash="dash", 
-                                            line_color="red",
-                                            annotation_text="Tweet Time", 
-                                            annotation_position="top right"
-                                        )
+                                        # Add vertical line for tweet time only if we have a valid timestamp
+                                        if tweet_dt_str:
+                                            fig.add_shape(
+                                                type="line",
+                                                x0=tweet_dt_str,
+                                                x1=tweet_dt_str,
+                                                y0=0,
+                                                y1=1,
+                                                yref="paper",
+                                                line=dict(color="red", width=2, dash="dash"),
+                                            )
+                                            
+                                            # Add annotation for tweet time
+                                            fig.add_annotation(
+                                                x=tweet_dt_str,
+                                                y=1,
+                                                yref="paper",
+                                                text="Tweet Time",
+                                                showarrow=True,
+                                                arrowhead=1,
+                                                ax=0,
+                                                ay=-40
+                                            )
                                         
                                         # Improve layout
                                         fig.update_layout(
@@ -172,14 +192,29 @@ if st.sidebar.button("Analyze Tweets"):
                                             title=f"Swap Count for {df['token_symbol'].iloc[0] if not df['token_symbol'].iloc[0] is None else address[:10]+'...'}"
                                         )
                                         
-                                        # Add vertical line for tweet time
-                                        fig2.add_vline(
-                                            x=tweet_dt, 
-                                            line_dash="dash", 
-                                            line_color="red",
-                                            annotation_text="Tweet Time", 
-                                            annotation_position="top right"
-                                        )
+                                        # Add vertical line for tweet time only if we have a valid timestamp
+                                        if tweet_dt_str:
+                                            fig2.add_shape(
+                                                type="line",
+                                                x0=tweet_dt_str,
+                                                x1=tweet_dt_str,
+                                                y0=0,
+                                                y1=1,
+                                                yref="paper",
+                                                line=dict(color="red", width=2, dash="dash"),
+                                            )
+                                            
+                                            # Add annotation for tweet time
+                                            fig2.add_annotation(
+                                                x=tweet_dt_str,
+                                                y=1,
+                                                yref="paper",
+                                                text="Tweet Time",
+                                                showarrow=True,
+                                                arrowhead=1,
+                                                ax=0,
+                                                ay=-40
+                                            )
                                         
                                         # Improve layout
                                         fig2.update_layout(
@@ -192,54 +227,51 @@ if st.sidebar.button("Analyze Tweets"):
                                         
                                         # Calculate price change metrics
                                         # Get the first price after tweet time
-                                        # Ensuring both are in the same timezone and format:
-
-                                        df['hour'] = pd.to_datetime(df['hour'], utc=True)
-                                        tweet_dt = pd.to_datetime(tweet_time.replace(' UTC', '')).to_pydatetime()
-                                        post_tweet_data = df[df['hour'] >= tweet_dt].sort_values('hour')
-                                        pre_tweet_data = df[df['hour'] < tweet_dt].sort_values('hour')
-                                        
-                                        
-                                        if not post_tweet_data.empty and not pre_tweet_data.empty:
-                                            # Get prices right before and after tweet
-                                            price_before = pre_tweet_data.iloc[-1]['avg_token_price_usd']
-                                            price_after_1h = post_tweet_data.iloc[0]['avg_token_price_usd'] if len(post_tweet_data) > 0 else None
-                                            price_after_24h = post_tweet_data.iloc[-1]['avg_token_price_usd'] if len(post_tweet_data) > 0 else None
+                                        if tweet_dt_str:
+                                            tweet_dt = pd.to_datetime(tweet_dt_str)
+                                            post_tweet_data = df[df['hour'] >= tweet_dt].sort_values('hour')
+                                            pre_tweet_data = df[df['hour'] < tweet_dt].sort_values('hour')
                                             
-                                            # Calculate changes
-                                            if price_after_1h is not None:
-                                                change_1h = ((price_after_1h - price_before) / price_before) * 100
-                                            else:
-                                                change_1h = None
+                                            if not post_tweet_data.empty and not pre_tweet_data.empty:
+                                                # Get prices right before and after tweet
+                                                price_before = pre_tweet_data.iloc[-1]['avg_token_price_usd']
+                                                price_after_1h = post_tweet_data.iloc[0]['avg_token_price_usd'] if len(post_tweet_data) > 0 else None
+                                                price_after_24h = post_tweet_data.iloc[-1]['avg_token_price_usd'] if len(post_tweet_data) > 0 else None
                                                 
-                                            if price_after_24h is not None:
-                                                change_24h = ((price_after_24h - price_before) / price_before) * 100
-                                            else:
-                                                change_24h = None
-                                            
-                                            # Display metrics
-                                            st.markdown("#### Price Impact Analysis")
-                                            
-                                            m1, m2, m3 = st.columns(3)
-                                            
-                                            m1.metric(
-                                                "Price Before Tweet", 
-                                                f"${price_before:.6f}"
-                                            )
-                                            
-                                            if price_after_1h is not None:
-                                                m2.metric(
-                                                    "First Price After Tweet", 
-                                                    f"${price_after_1h:.6f}", 
-                                                    f"{change_1h:.2f}%"
+                                                # Calculate changes
+                                                if price_after_1h is not None:
+                                                    change_1h = ((price_after_1h - price_before) / price_before) * 100
+                                                else:
+                                                    change_1h = None
+                                                    
+                                                if price_after_24h is not None:
+                                                    change_24h = ((price_after_24h - price_before) / price_before) * 100
+                                                else:
+                                                    change_24h = None
+                                                
+                                                # Display metrics
+                                                st.markdown("#### Price Impact Analysis")
+                                                
+                                                m1, m2, m3 = st.columns(3)
+                                                
+                                                m1.metric(
+                                                    "Price Before Tweet", 
+                                                    f"${price_before:.6f}"
                                                 )
-                                            
-                                            if price_after_24h is not None:
-                                                m3.metric(
-                                                    "Latest Price", 
-                                                    f"${price_after_24h:.6f}", 
-                                                    f"{change_24h:.2f}%"
-                                                )
+                                                
+                                                if price_after_1h is not None:
+                                                    m2.metric(
+                                                        "First Price After Tweet", 
+                                                        f"${price_after_1h:.6f}", 
+                                                        f"{change_1h:.2f}%"
+                                                    )
+                                                
+                                                if price_after_24h is not None:
+                                                    m3.metric(
+                                                        "Latest Price", 
+                                                        f"${price_after_24h:.6f}", 
+                                                        f"{change_24h:.2f}%"
+                                                    )
                                     else:
                                         st.info(f"No price data found for address {address}")
                         else:
