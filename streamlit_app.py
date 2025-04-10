@@ -134,7 +134,7 @@ if st.sidebar.button("Analyze Tweets"):
                                         col2.markdown(f"**Tweet Time:** {tweet_time}")
                                         
                                         # Find the tweet time as datetime for plotting the vertical line
-                                        tweet_dt = pd.to_datetime(tweet_time.replace(' UTC', ''), utc=True)
+                                        tweet_dt = pd.to_datetime(tweet_time.replace(' UTC', '')).to_pydatetime()
                                         
                                         # Create price chart
                                         st.markdown("#### Price Movement")
