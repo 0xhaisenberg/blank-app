@@ -134,7 +134,7 @@ if st.sidebar.button("Analyze Tweets"):
                                         col2.markdown(f"**Tweet Time:** {tweet_time}")
                                         
                                         # Find the tweet time as datetime for plotting the vertical line
-                                        tweet_dt = pd.to_datetime(tweet_time.replace(' UTC', ''))
+                                        tweet_dt = pd.to_datetime(tweet_time.replace(' UTC', ''), utc=True)
                                         
                                         # Create price chart
                                         st.markdown("#### Price Movement")
@@ -192,8 +192,13 @@ if st.sidebar.button("Analyze Tweets"):
                                         
                                         # Calculate price change metrics
                                         # Get the first price after tweet time
-                                        post_tweet_data = df[df['hour'] >= tweet_dt].sort_values('hour')
-                                        pre_tweet_data = df[df['hour'] < tweet_dt].sort_values('hour')
+                                        
+                                        # Ensuring both are in the same timezone and format:
+					df['hour'] = pd.to_datetime(df['hour'], utc=True)
+					tweet_dt = pd.to_datetime(tweet_time.replace(' UTC', ''), utc=True)
+					post_tweet_data = df[df['hour'] >= tweet_dt].sort_values('hour')
+					pre_tweet_data = df[df['hour'] < tweet_dt].sort_values('hour')
+                                        
                                         
                                         if not post_tweet_data.empty and not pre_tweet_data.empty:
                                             # Get prices right before and after tweet
