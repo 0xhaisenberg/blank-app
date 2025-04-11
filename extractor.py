@@ -5,7 +5,6 @@ import time
 import argparse
 from dateutil.relativedelta import relativedelta
 from flipside import Flipside
-import config
 
 
 def authenticate_twitter_api():
@@ -14,7 +13,7 @@ def authenticate_twitter_api():
     You need to replace these placeholders with your actual API credentials.
     """
     # For v2 API, you'll need a bearer token
-    bearer_token = config.bearer_token
+    bearer_token = st.secrets.bearer_token
     
     try:
         # Initialize the client with v2 API
@@ -148,7 +147,7 @@ def query_flipside_data(addresses, timestamps):
     """
     
     # Initialize Flipside with API Key
-    flipside = Flipside(config.api_key, "https://api-v2.flipsidecrypto.xyz")
+    flipside = Flipside(st.secrets.api_key, "https://api-v2.flipsidecrypto.xyz")
     
     # Format addresses for SQL query
     addresses_str = "', '".join(addresses)
